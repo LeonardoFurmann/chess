@@ -78,7 +78,7 @@ Ver [Backlog](#9-backlog-fase-3).
 | `dev` | servidor de desenvolvimento |
 | `build` | build de produção |
 | `lint` | ESLint (inclui regras de fronteira) |
-| `typecheck` | `tsc --noEmit` |
+| `typecheck` | `next typegen` + `tsc --noEmit` |
 | `test` | Vitest — suíte rápida (obrigatória antes de todo PR) |
 | `test:slow` | Vitest — perft profundo e partidas da IA (roda sob demanda) |
 | `test:e2e` | Playwright |
@@ -151,7 +151,7 @@ Ninguém fora de `engine` e `ai` importa `engine/core`. Componentes são de apre
 - **Índice das casas:** `index = rank * 8 + file`, com `a1 = 0`, `h1 = 7`, `a8 = 56`, `h8 = 63`.
 - **Peças:** `0` = vazio; brancas positivas, pretas negativas — `1` peão, `2` cavalo, `3` bispo, `4` torre, `5` dama, `6` rei (ex.: `-5` = dama preta).
 - **Lance interno:** um `number` com campos empacotados em bits — origem (6 bits), destino (6 bits), peça de promoção, e flags (captura, avanço duplo, en passant, roque curto, roque longo, promoção). O layout exato é definido no contrato da Fase 0.
-- **Estado da posição:** tabuleiro, lado a jogar, direitos de roque (4 bits: `K`, `Q`, `k`, `q`), casa de en passant (ou `-1`), contador de meio-lances (regra dos 50), número do lance, hash Zobrist e pilha de histórico para `unmakeMove` (peça capturada, direitos de roque, en passant, contador e hash anteriores).
+- **Estado da posição:** tabuleiro, lado a jogar, direitos de roque (4 bits: `K`, `Q`, `k`, `q`), casa de en passant (ou `-1`), contador de meio-lances (regra dos 50), número do lance, casas dos dois reis, hash Zobrist e pilha de histórico para `unmakeMove` (peça capturada, direitos de roque, en passant, contador e hash anteriores).
 
 ### 4.2 Camada interna — o que o contrato de `Position` precisa expressar
 
@@ -255,12 +255,13 @@ Ordenação de lances (MVV-LVA, killer moves), busca de quiescência, tabela de 
 
 A busca roda num **Web Worker** (a UI nunca trava). Mensagens no estilo UCI:
 
-- **UI → Worker** `search`: `requestId`, FEN inicial da partida, lista de lances em UCI desde ela, nível.
-- **UI → Worker** `stop`: interrompe a busca e retorna o melhor lance até o momento.
+- **UI → Worker** `search`: `requestId`, FEN inicial da partida, lista de lances em UCI desde ela, nível e semente opcional (aleatoriedade do nível fácil).
 - **Worker → UI** `bestmove`: `requestId`, lance em UCI, profundidade atingida, score, nós visitados, tempo gasto.
 - **Worker → UI** `error`: `requestId`, mensagem.
 
 A UI descarta respostas cujo `requestId` não seja o da busca atual (ex.: após desfazer ou nova partida).
+
+**Cancelamento:** a busca é síncrona dentro do Worker, então ele não processa mensagens enquanto busca — uma mensagem `stop` nunca seria lida a tempo. Para cancelar, a UI ignora a resposta pelo `requestId` e, quando precisa liberar a CPU imediatamente, encerra o Worker (`terminate()`) e cria outro.
 
 ### 5.5 Critérios de aceite
 
