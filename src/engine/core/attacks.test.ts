@@ -108,9 +108,9 @@ describe("sliders", () => {
     expect(attacked(fen, "d7", WHITE)).toBe(true);
     expect(attacked(fen, "g2", WHITE)).toBe(true);
     expect(attacked(fen, "h4", WHITE)).toBe(false);
-    const blocked = "4k3/8/8/8/5p2/7B/8/4K3 w - - 0 1";
+    const blocked = "4k3/8/8/5p2/8/7B/8/4K3 w - - 0 1";
     expect(attacked(blocked, "g4", WHITE)).toBe(true);
-    expect(attacked(blocked, "f5", WHITE)).toBe(false);
+    expect(attacked(blocked, "f5", WHITE)).toBe(true);
     expect(attacked(blocked, "e6", WHITE)).toBe(false);
   });
 
@@ -145,7 +145,7 @@ describe("knights and kings", () => {
   });
 
   it("knight attacks over pieces and not adjacent squares", () => {
-    const fen = "4k3/8/8/3PPP2/3PNP2/3PPP2/8/4K3 w - - 0 1";
+    const fen = "4k3/8/8/3ppp2/3pNp2/3ppp2/8/4K3 w - - 0 1";
     for (const sq of ["d6", "f6", "c5", "g5", "c3", "g3", "d2", "f2"]) {
       expect(attacked(fen, sq, WHITE), sq).toBe(true);
     }
