@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { PERFT_CASES } from "../../../test/fixtures/perft";
 import { parseSquare } from "./board";
 import { START_FEN, parseFen, toFen } from "./fen";
+import { computeHash } from "./zobrist";
 import {
   BLACK,
   CASTLE_BLACK_QUEEN,
@@ -50,8 +51,7 @@ describe("parseFen fields", () => {
     expect(p.board[parseSquare("e8")]).toBe(KING * BLACK);
     expect(p.board[parseSquare("d5")]).toBe(-1);
     expect(p.board[parseSquare("e5")]).toBe(1);
-    expect(p.hashHi).toBe(0);
-    expect(p.hashLo).toBe(0);
+    expect({ hi: p.hashHi, lo: p.hashLo }).toEqual(computeHash(p));
     expect(p.history).toEqual([]);
   });
 
