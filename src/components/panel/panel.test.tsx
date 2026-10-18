@@ -16,6 +16,21 @@ describe("MoveList", () => {
     expect(items[1]).toHaveTextContent("2. Nf3");
   });
 
+  it("starts with Black when firstColor is b", () => {
+    render(<MoveList moves={["e5", "Nf3", "Nc6"]} firstColor="b" />);
+    const items = screen.getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent("1... e5");
+    expect(items[1]).toHaveTextContent("2. Nf3 Nc6");
+  });
+
+  it("shows a lone Black first move as 1...", () => {
+    render(<MoveList moves={["e5"]} firstColor="b" />);
+    const items = screen.getAllByRole("listitem");
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent("1... e5");
+  });
+
   it("renders an empty list", () => {
     render(<MoveList moves={[]} />);
     expect(screen.queryAllByRole("listitem")).toHaveLength(0);

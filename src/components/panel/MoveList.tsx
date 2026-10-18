@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { Color } from "@/engine";
 
-export function MoveList({ moves }: { moves: readonly string[] }) {
+export function MoveList({
+  moves,
+  firstColor = "w",
+}: {
+  moves: readonly string[];
+  firstColor?: Color;
+}) {
   const endRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
@@ -10,9 +17,15 @@ export function MoveList({ moves }: { moves: readonly string[] }) {
     endRef.current?.scrollIntoView?.({ block: "nearest" });
   }, [moves.length]);
 
-  const rows: { number: number; white: string; black?: string }[] = [];
-  for (let i = 0; i < moves.length; i += 2) {
-    rows.push({ number: i / 2 + 1, white: moves[i], black: moves[i + 1] });
+  // When Black moves first (FEN start), the first row has no White move.
+  const offset = firstColor === "b" ? 1 : 0;
+  const rows: { number: number; white?: string; black?: string }[] = [];
+  for (let ply = 0; ply < moves.length + offset; ply += 2) {
+    rows.push({
+      number: ply / 2 + 1,
+      white: ply - offset >= 0 ? moves[ply - offset] : undefined,
+      black: moves[ply + 1 - offset],
+    });
   }
 
   return (
@@ -27,7 +40,13 @@ export function MoveList({ moves }: { moves: readonly string[] }) {
             key={row.number}
             ref={idx === rows.length - 1 ? endRef : undefined}
           >
-            <span>{row.number}.</span> <span>{row.white}</span>
+            {row.white !== undefined ? (
+              <>
+                <span>{row.number}.</span> <span>{row.white}</span>
+              </>
+            ) : (
+              <span>{row.number}...</span>
+            )}
             {row.black !== undefined ? (
               <>
                 {" "}
