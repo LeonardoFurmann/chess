@@ -217,6 +217,24 @@ describe("Board drag and drop", () => {
     expect(sq("e2").querySelector("[data-piece]")).toHaveAttribute("data-piece", "wP");
   });
 
+  it("ends the drag when released outside the board and ignores later clicks", () => {
+    const { onMove } = setup();
+    fireEvent.pointerDown(sq("e2"), { pointerId: 1, clientX: 10, clientY: 10, button: 0 });
+    fireEvent.pointerMove(document.body, { pointerId: 1, clientX: -300, clientY: -300 });
+    fireEvent.pointerUp(document.body, { pointerId: 1, clientX: -300, clientY: -300, button: 0 });
+    expect(document.querySelector("[data-legal]")).toBeNull();
+    expect(sq("e2").querySelector("img")?.getAttribute("style") ?? "").not.toContain("translate");
+    fireEvent.pointerUp(sq("e4"), { pointerId: 1, clientX: 20, clientY: 5, button: 0 });
+    expect(onMove).not.toHaveBeenCalled();
+  });
+
+  it("ends the drag on pointercancel outside the board", () => {
+    setup();
+    fireEvent.pointerDown(sq("e2"), { pointerId: 1, clientX: 10, clientY: 10, button: 0 });
+    fireEvent.pointerCancel(document.body, { pointerId: 1 });
+    expect(document.querySelector("[data-legal]")).toBeNull();
+  });
+
   it("does nothing when dropping on the origin square", () => {
     const { onMove } = setup();
     drag("e2", "e2");

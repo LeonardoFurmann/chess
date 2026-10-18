@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { BoardState, Piece, SquareName } from "@/engine";
 
@@ -107,22 +107,44 @@ export function Board({
     setDrag(next);
   };
 
-  const handlePointerMove = (e: ReactPointerEvent) => {
+  const handlePointerMove = (e: PointerEvent) => {
     if (!drag) return;
     setDrag({ ...drag, dx: e.clientX - drag.startX, dy: e.clientY - drag.startY });
   };
 
-  const handlePointerUp = (e: ReactPointerEvent) => {
+  const handlePointerUp = (e: PointerEvent) => {
     const current = drag;
     if (!current) return;
     endDrag();
     const to = squareFromPoint(e.clientX, e.clientY, e.target);
-    if (!to || to === current.from) return;
+    if (!interactive || !to || to === current.from) return;
     if (movesFrom(current.from).some((m) => m.to === to)) {
       select(null);
       onMove(current.from, to);
     }
   };
+
+  // While dragging, listen on the window so releasing or cancelling outside the
+  // board still ends the drag. Handlers are read through a ref to stay current.
+  const handlersRef = useRef({ handlePointerMove, handlePointerUp, endDrag });
+  useEffect(() => {
+    handlersRef.current = { handlePointerMove, handlePointerUp, endDrag };
+  });
+  const isDragging = drag !== null;
+  useEffect(() => {
+    if (!isDragging) return;
+    const move = (e: PointerEvent) => handlersRef.current.handlePointerMove(e);
+    const up = (e: PointerEvent) => handlersRef.current.handlePointerUp(e);
+    const cancel = () => handlersRef.current.endDrag();
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancel);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+    };
+  }, [isDragging]);
 
   const flipped = orientation === "black";
   const rows = flipped ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
@@ -135,9 +157,6 @@ export function Board({
       data-testid="board"
       data-orientation={orientation}
       className="mx-auto grid aspect-square w-full max-w-[40rem] touch-none select-none grid-cols-8 overflow-hidden rounded-sm border border-neutral-700"
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={endDrag}
     >
       {rows.map((r, rowIdx) =>
         cols.map((c, colIdx) => {
