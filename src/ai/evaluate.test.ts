@@ -8,10 +8,16 @@ import { START_FEN, clonePosition, parseFen, toFen } from "@/engine/core";
 import type { Position } from "@/engine/core";
 import { evaluate } from "./evaluate";
 
-/** Swap colors, flip ranks and flip the side to move. */
+/** Swap piece colors and flip ranks, keeping the same side to move (so the score negates). */
 function mirror(position: Position): Position {
   const result = clonePosition(position);
   for (let sq = 0; sq < 64; sq++) result.board[sq ^ 56] = -position.board[sq];
+  return result;
+}
+
+/** Full color mirror: also hands the move to the other side (so the score is unchanged). */
+function mirrorWithSide(position: Position): Position {
+  const result = mirror(position);
   result.sideToMove = -position.sideToMove as Position["sideToMove"];
   return result;
 }
@@ -32,6 +38,13 @@ describe("evaluate", () => {
     for (const rp of randomPositions({ count: 300 })) {
       const pos = parseFen(rp.fen);
       expect(evaluate(pos), rp.fen).toBe(0 - evaluate(mirror(pos)));
+    }
+  });
+
+  it("is unchanged when colors, ranks and side to move are all mirrored", () => {
+    for (const rp of randomPositions({ count: 300 })) {
+      const pos = parseFen(rp.fen);
+      expect(evaluate(pos), rp.fen).toBe(evaluate(mirrorWithSide(pos)));
     }
   });
 
