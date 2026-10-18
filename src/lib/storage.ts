@@ -12,16 +12,45 @@ export interface SavedGame {
 
 export const STORAGE_KEY = "chess:current-game";
 
+function isSavedGame(value: unknown): value is SavedGame {
+  if (typeof value !== "object" || value === null) return false;
+  const g = value as Record<string, unknown>;
+  return (
+    g.v === 1 &&
+    (g.mode === "local" || g.mode === "ai") &&
+    (g.color === "white" || g.color === "black") &&
+    (g.level === 1 || g.level === 2 || g.level === 3) &&
+    typeof g.initialFen === "string" &&
+    Array.isArray(g.moves) &&
+    g.moves.every((m) => typeof m === "string")
+  );
+}
+
 /** Saved game, or null if missing, corrupted, from another version or storage is unavailable. */
 export function loadGame(): SavedGame | null {
-  throw new Error("not implemented");
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return isSavedGame(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Never throws (storage errors are ignored). */
 export function saveGame(game: SavedGame): void {
-  throw new Error("not implemented");
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
+  } catch {
+    // storage unavailable or full: ignore
+  }
 }
 
 export function clearGame(): void {
-  throw new Error("not implemented");
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // storage unavailable: ignore
+  }
 }
