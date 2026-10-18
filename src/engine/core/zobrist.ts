@@ -1,4 +1,8 @@
+import { fileOf, makeSquare, rankOf } from "./board";
 import type { Position } from "./position";
+import { createRng } from "./rng";
+import type { Rng } from "./rng";
+import { BLACK, NO_SQUARE, PAWN, WHITE } from "./types";
 import type { HashPair, PieceCode, Square } from "./types";
 
 /**
@@ -26,9 +30,37 @@ export function pieceKeyIndex(piece: PieceCode, square: Square): number {
   return kindIndex * 64 + square;
 }
 
+const ZOBRIST_SEED = 0x5eed1234;
+
+let cachedKeys: ZobristKeys | null = null;
+
+function fillKeys(rng: Rng, hi: Uint32Array, lo: Uint32Array): void {
+  for (let i = 0; i < hi.length; i++) {
+    hi[i] = rng.nextUint32();
+    lo[i] = rng.nextUint32();
+  }
+}
+
 /** Lazily built, cached key tables. */
 export function getZobristKeys(): ZobristKeys {
-  throw new Error("not implemented");
+  if (cachedKeys !== null) return cachedKeys;
+  const rng = createRng(ZOBRIST_SEED);
+  const pieceHi = new Uint32Array(12 * 64);
+  const pieceLo = new Uint32Array(12 * 64);
+  fillKeys(rng, pieceHi, pieceLo);
+  const sideHi = rng.nextUint32();
+  const sideLo = rng.nextUint32();
+  const castlingHi = new Uint32Array(16);
+  const castlingLo = new Uint32Array(16);
+  fillKeys(rng, castlingHi, castlingLo);
+  // Index 0 (no rights) contributes nothing, so "no castling" is the neutral element.
+  castlingHi[0] = 0;
+  castlingLo[0] = 0;
+  const epFileHi = new Uint32Array(8);
+  const epFileLo = new Uint32Array(8);
+  fillKeys(rng, epFileHi, epFileLo);
+  cachedKeys = { pieceHi, pieceLo, sideHi, sideLo, castlingHi, castlingLo, epFileHi, epFileLo };
+  return cachedKeys;
 }
 
 /**
@@ -36,10 +68,42 @@ export function getZobristKeys(): ZobristKeys {
  * has a pseudo-legal en passant capture — otherwise -1.
  */
 export function hashedEpFile(position: Position): number {
-  throw new Error("not implemented");
+  const ep = position.epSquare;
+  if (ep === NO_SQUARE) return -1;
+  const side = position.sideToMove;
+  // The target square is on rank 6 when white captures and on rank 3 when black captures.
+  if (rankOf(ep) !== (side === WHITE ? 5 : 2)) return -1;
+  const file = fileOf(ep);
+  const pawn = PAWN * side;
+  const pawnRank = side === WHITE ? 4 : 3;
+  if (file > 0 && position.board[makeSquare(file - 1, pawnRank)] === pawn) return file;
+  if (file < 7 && position.board[makeSquare(file + 1, pawnRank)] === pawn) return file;
+  return -1;
 }
 
 /** Full hash computed from scratch. */
 export function computeHash(position: Position): HashPair {
-  throw new Error("not implemented");
+  const keys = getZobristKeys();
+  let hi = 0;
+  let lo = 0;
+  const board = position.board;
+  for (let square = 0; square < 64; square++) {
+    const piece = board[square];
+    if (piece === 0) continue;
+    const index = pieceKeyIndex(piece, square);
+    hi ^= keys.pieceHi[index];
+    lo ^= keys.pieceLo[index];
+  }
+  if (position.sideToMove === BLACK) {
+    hi ^= keys.sideHi;
+    lo ^= keys.sideLo;
+  }
+  hi ^= keys.castlingHi[position.castling & 15];
+  lo ^= keys.castlingLo[position.castling & 15];
+  const epFile = hashedEpFile(position);
+  if (epFile >= 0) {
+    hi ^= keys.epFileHi[epFile];
+    lo ^= keys.epFileLo[epFile];
+  }
+  return { hi: hi >>> 0, lo: lo >>> 0 };
 }

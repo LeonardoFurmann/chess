@@ -1,6 +1,7 @@
 import { makeSquare, parseSquare, rankOf, squareName } from "./board";
 import { createEmptyPosition } from "./position";
 import type { Position } from "./position";
+import { computeHash } from "./zobrist";
 import {
   BISHOP,
   BLACK,
@@ -134,6 +135,9 @@ export function parseFen(fen: string): Position {
 
   position.halfmoveClock = parseCounter(halfmove, "halfmove clock", 0);
   position.fullmoveNumber = parseCounter(fullmove, "fullmove number", 1);
+  const hash = computeHash(position);
+  position.hashHi = hash.hi;
+  position.hashLo = hash.lo;
   return position;
 }
 
