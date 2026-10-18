@@ -1,3 +1,4 @@
+import { NO_SQUARE, WHITE } from "./types";
 import type { Color, Square, UndoInfo } from "./types";
 
 /** Mutable position (docs/SPEC.md §4.1). Only the engine and the AI touch it. */
@@ -24,10 +25,26 @@ export interface Position {
 
 /** Empty board, white to move, no castling, no en passant, counters 0/1, kings NO_SQUARE. */
 export function createEmptyPosition(): Position {
-  throw new Error("not implemented");
+  return {
+    board: new Int8Array(64),
+    sideToMove: WHITE,
+    castling: 0,
+    epSquare: NO_SQUARE,
+    halfmoveClock: 0,
+    fullmoveNumber: 1,
+    whiteKing: NO_SQUARE,
+    blackKing: NO_SQUARE,
+    hashHi: 0,
+    hashLo: 0,
+    history: [],
+  };
 }
 
 /** Deep copy (board and history included). */
 export function clonePosition(position: Position): Position {
-  throw new Error("not implemented");
+  return {
+    ...position,
+    board: position.board.slice(),
+    history: position.history.map((undo) => ({ ...undo })),
+  };
 }
