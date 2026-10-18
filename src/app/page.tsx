@@ -1,8 +1,19 @@
-// Placeholder until T2.6 implements the home screen.
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { HomeScreen } from "@/components/home/home-screen";
+import { loadGame } from "@/lib/storage";
+
 export default function Home() {
-  return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <h1 className="text-2xl font-semibold">Xadrez — em construção</h1>
-    </main>
-  );
+  const router = useRouter();
+  // localStorage only exists on the client: read after mount to avoid a hydration mismatch.
+  const [hasSavedGame, setHasSavedGame] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHasSavedGame(loadGame() !== null);
+  }, []);
+
+  return <HomeScreen hasSavedGame={hasSavedGame} onNavigate={(url) => router.push(url)} />;
 }
