@@ -21,6 +21,7 @@ Divisão da [SPEC](../SPEC.md) em tarefas para o pipeline de agentes (SPEC §7).
 | [T1.7](T1.7-notation.md) | [#8](https://github.com/LeonardoFurmann/chess/issues/8) | Notação UCI e SAN | T1.6 | M |
 | [T1.8](T1.8-game-api.md) | [#9](https://github.com/LeonardoFurmann/chess/issues/9) | API pública `Game` | T1.5, T1.6, T1.7 | M |
 | [T1.9](T1.9-oracle-suite.md) | [#10](https://github.com/LeonardoFurmann/chess/issues/10) | Suíte de oráculo com `chess.js` | T1.8 | M |
+| [T1.10](T1.10-oracle-invariants.md) | [#38](https://github.com/LeonardoFurmann/chess/issues/38) | Invariantes do motor em todas as posições do oráculo | T1.9 | P |
 | [T2.1](T2.1-evaluate.md) | [#11](https://github.com/LeonardoFurmann/chess/issues/11) | Avaliação estática | T1.1 | P |
 | [T2.2](T2.2-search.md) | [#12](https://github.com/LeonardoFurmann/chess/issues/12) | Busca: negamax, alfa-beta, aprofundamento iterativo | T1.5, T1.6, T2.1 | G |
 | [T2.3](T2.3-worker-levels.md) | [#13](https://github.com/LeonardoFurmann/chess/issues/13) | Web Worker, níveis e hook `useEngine` | T1.7, T2.2 | M |
@@ -55,7 +56,7 @@ F0 ─┬─► T1.1 ─┬─► T1.2 ─┐
 | 4 | T1.7, T2.2 | |
 | 5 | T1.8, T2.3 | |
 | 6 | T1.9, T2.7 | |
-| 7 | T2.8 | |
+| 7 | T2.8, T1.10 | T1.10 foi adicionado depois do relatório da Fase 1 |
 
 **Caminho crítico:** F0 → T1.1 → T1.3 → T1.6 → T1.7 → T1.8 → T2.7 → T2.8. Atrasos nesses tickets atrasam o MVP; os demais têm folga.
 
