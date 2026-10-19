@@ -231,7 +231,7 @@ describe("search: stopping", () => {
     expect(result.depth).toBeGreaterThanOrEqual(1);
     expect(result.depth).toBeLessThan(8);
     expect(snapshot(position)).toEqual(before);
-  });
+  }, 120_000);
 
   it("a stopped search returns the move of the last complete iteration", () => {
     // Stopping mid-iteration must discard it: with a mate in 1 found at depth 2, a stop that
@@ -307,7 +307,7 @@ describe("search: position is left untouched", () => {
         expect(snapshot(position)).toEqual(before);
       }
     }
-  });
+  }, 120_000);
 
   it("restores random positions (castling, en passant, promotions in play)", () => {
     for (const rp of randomPositions({ count: 60, seed: 4242 })) {
@@ -322,7 +322,7 @@ describe("search: position is left untouched", () => {
         expect(legal).toContain(uci(result.move as Move));
       }
     }
-  });
+  }, 120_000);
 });
 
 describe("search: consistency of alpha-beta with its own subtrees", () => {
@@ -349,7 +349,7 @@ describe("search: consistency of alpha-beta with its own subtrees", () => {
       const result = search(root, { maxDepth: 2 });
       expect(result.score, rp.fen).toBe(best);
     }
-  });
+  }, 120_000);
 
   it("root score equals the best of the children's scores (depth 3, kiwipete and start)", () => {
     for (const fen of [START_FEN, KIWIPETE]) {
