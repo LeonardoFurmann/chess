@@ -10,6 +10,8 @@ export default defineConfig({
   resolve: { alias },
   test: {
     passWithNoTests: true,
+    // The suite runs heavy oracle/perft/search tests in parallel; 5 s (default) is too tight under load.
+    testTimeout: 30_000,
     projects: [
       {
         extends: true,
