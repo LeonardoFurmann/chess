@@ -17,7 +17,7 @@ Os 9 tickets da Fase 1 foram mergeados na `main` e as issues #2–#10 estão fec
 | Ticket | PR | Commit na `main` | Merge | Retrabalho | Testes adversariais |
 |---|---|---|---|---|---|
 | T1.1 Position e FEN | #20 | `fc888db` | 16:05 | 1 (falso positivo de ambiente) | 52 |
-| T1.2 Casas atacadas | #26 | `6130dce` | 17:34 | 0 | 19 |
+| T1.2 Casas atacadas | #26 | `6130dce` | 17:34 | 0 | 21 |
 | T1.3 Lances pseudolegais | #24 | `56c9adb` | 17:32 | 0 | 39 |
 | T1.4 Zobrist | #27 | `d423073` | 17:36 | 0 | 22 |
 | T1.5 Empates estáticos | #25 | `3a0ee8b` | 17:37 | 0 | 44 |
@@ -26,6 +26,8 @@ Os 9 tickets da Fase 1 foram mergeados na `main` e as issues #2–#10 estão fec
 | T1.8 API `Game` | #33 | `9528d9b` | 22:23 | 0 | 59 |
 | T1.9 Oráculo `chess.js` | #36 | `b1ae14e` | 23:21 | 0 | 71 |
 
+A coluna de testes adversariais usa a contagem informada pelo verificador, que é a do Vitest em execução: em testes parametrizados, cada caso conta como um teste. A exceção é a T1.2, corrigida para 21 contando o commit `b10a630`, porque o verificador havia informado 19.
+
 ## 2. Linha do tempo do paralelismo
 
 Horários informados pelos próprios agentes (`date -Iseconds`), arredondados ao minuto e aproximados. Por esse motivo, alguns inícios aparecem um ou dois minutos antes do disparo da onda. **I** = implementador, **R** = revisor, **V** = verificador, **F** = retrabalho, **M** = merge pelo orquestrador.
@@ -33,7 +35,7 @@ Horários informados pelos próprios agentes (`date -Iseconds`), arredondados ao
 | Onda | Janela | Fase 1 | Fase 2 (em paralelo) | Agentes |
 |---|---|---|---|---|
 | 1 | 14:08–16:09 | T1.1: I 14:09–14:25 · R 14:25–14:35 · V 14:26–14:36 · F 14:37–14:57 · R/V 14:57–15:20 · M 16:05 | T2.4, T2.5, T2.6 | 21 |
-| 2 | 16:21–17:39 | T1.2, T1.3, T1.4, T1.5: I 16:21–16:51 · R 16:47–16:59 · V 16:53–17:15 · M 17:32–17:37 | T2.1 (5ª vaga, I 16:53–17:18) | 15 (+5 que falharam ao criar o worktree) |
+| 2 | 16:21–17:39 | T1.2, T1.3, T1.4, T1.5: I 16:21–16:51 · R 16:47–16:59 · V 16:53–17:15 · M 17:32–17:37 | T2.1 (5ª vaga, I 16:53–17:18) | 19 (+5 que falharam ao criar o worktree) |
 | 3 | 18:02–18:36 | T1.6: I 18:03–18:20 · R 18:20–18:23 · V 18:20–18:31 · M 18:36 | — | 3 |
 | 4 | 20:42–21:46 | T1.7: I 20:40–20:54 · R 20:54–20:56 · V 20:54–21:04 · M 21:27 | T2.2 (+ chore #32) | 6 (+2 avulsos) |
 | 5 | 21:51–22:25 | T1.8: I 21:50–22:04 · R 22:05–22:07 · V 22:05–22:21 · M 22:23 | T2.3 | 6 |
@@ -42,7 +44,8 @@ Horários informados pelos próprios agentes (`date -Iseconds`), arredondados ao
 Observações:
 
 - **Pico de paralelismo:** 4 implementadores nas ondas 1 e 2 (limite da SPEC §7.3). Na onda 2, a T2.1 esperou a primeira vaga livre, controlada por um semáforo no script do workflow.
-- **Caminho crítico:** T1.1 → T1.3 → T1.6 → T1.7 → T1.8 levou de 14:08 a 22:23. Descontadas as pausas entre ondas, que foram esperas de aprovação humana, cerca de 5h10 foram de execução efetiva.
+- **Caminho crítico:** T1.1 → T1.3 → T1.6 → T1.7 → T1.8 levou de 14:08 a 22:23 (8h15 de relógio). Descontadas as pausas entre o fim de uma onda e o disparo da seguinte, que foram esperas de aprovação humana e somam 2h46, sobram cerca de 5h29 de execução efetiva.
+- **Revisões duplicadas:** na onda 2, a retomada do workflow depois do incidente dos worktrees (seção 8) rodou de novo as revisões dos PRs #24–#27. Por isso cada um deles tem dois comentários APROVADO, ambos independentes e com o mesmo veredito.
 - **Revisor e verificador:** rodaram em paralelo em todos os tickets. A partir da onda 2, o revisor passou a revisar só pela leitura do diff (1–3 min por PR). Na onda 1, rodando as checagens, ele levava 10–30 min.
 
 ## 3. Rodadas de retrabalho
@@ -58,12 +61,12 @@ Na Fase 1, todo o retrabalho veio de ambiente e nenhum de defeito de código.
 
 **Revisor (Opus):** nenhuma reprovação em ticket T1.x. As observações não bloqueantes foram úteis porque viraram orientação para os tickets seguintes:
 
-- O hash incremental precisa recalcular a coluna de en passant depois do lance, porque a regra "só com captura en passant pseudolegal" depende do tabuleiro resultante. A sugestão, nas revisões de T1.3 e T1.4, foi comparar com `computeHash` dentro dos testes. Ela foi passada ao implementador da T1.6, que a cobriu.
+- O hash incremental precisa recalcular a coluna de en passant depois do lance, porque a regra "só com captura en passant pseudolegal" depende do tabuleiro resultante. A sugestão, na revisão da T1.4, foi comparar com `computeHash` dentro dos testes. Ela foi passada ao implementador da T1.6, que a cobriu.
 - Riscos de desempenho para o perft(5): a alocação de um array por peão em `movegen.ts` e o `for...of` em `attacks.ts`. O implementador da T1.6 ficou abaixo de 15 s otimizando só o próprio escopo.
 - O `Game` precisa reaplicar os lances desde a FEN inicial para `repetitionCount` enxergar a partida inteira. A nota veio da revisão da T1.6 e foi aplicada na T1.8.
 - O `fen.test.ts` foi alterado pela T1.4, fora do escopo, porque a asserção `hash === 0` do stub passaria a falhar. O revisor aceitou como mudança mínima e inevitável.
 
-**Verificador (Sonnet):** 375 testes adversariais nos tickets T1.x, escritos sem ler a implementação, e nenhum bug real encontrado. Os erros que ele relatou nas primeiras execuções eram dos próprios testes: FENs ilegais, expectativas de repetição ou de desambiguação erradas e timeouts. Ele corrigiu tudo antes do commit, relendo a SPEC. A contribuição mais valiosa foi ampliar a cobertura com oráculo `chess.js`, por exemplo 400 posições na T1.3 e 2.200 na T1.7, além do oráculo independente da T1.9.
+**Verificador (Sonnet):** 377 testes adversariais nos tickets T1.x, escritos sem ler a implementação, e nenhum bug real encontrado. Os erros que ele relatou nas primeiras execuções eram dos próprios testes: FENs ilegais, expectativas de repetição ou de desambiguação erradas e timeouts. Ele corrigiu tudo antes do commit, relendo a SPEC. A contribuição mais valiosa foi ampliar a cobertura com oráculo `chess.js`, por exemplo 400 posições na T1.3 e 2.200 na T1.7, além do oráculo independente da T1.9.
 
 ## 5. O que escapou
 
@@ -84,9 +87,9 @@ O mais perto disso foi uma decisão do orquestrador. A T2.2 ficou vermelha no me
 | Item | Valor |
 |---|---|
 | Janela total | 14:08–23:21 (≈ 9h13, com pausas para aprovação humana entre ondas) |
-| Execução efetiva das ondas 1–6 | ≈ 6h00 (onda 1: 2h01 · 2: 1h18 · 3: 0h34 · 4: 1h04 · 5: 0h34 · 6: 0h42) |
-| Agentes disparados | 64 em workflows (incluindo 5 que falharam ao criar o worktree) + 2 avulsos |
-| Tokens de subagentes | ≈ 4,36 M no total das ondas 1–6, sendo 1,19 M · 1,13 M · 0,24 M · 0,55 M · 0,43 M · 0,42 M por onda, mais 0,1 M dos agentes avulsos |
+| Execução efetiva das ondas 1–6 | ≈ 6h13 (onda 1: 2h01 · 2: 1h18 · 3: 0h34 · 4: 1h04 · 5: 0h34 · 6: 0h42) |
+| Agentes disparados | 61 em workflows que rodaram (21 · 19 · 3 · 6 · 6 · 6) + 5 que falharam ao criar o worktree + 2 avulsos (retrabalho do timeout da T2.2 e revisão do chore #32) |
+| Tokens de subagentes | ≈ 3,96 M no total: 3,86 M nos workflows das ondas 1–6 (1,19 M · 1,13 M · 0,24 M · 0,45 M · 0,43 M · 0,42 M) mais 0,10 M dos 2 agentes avulsos. A revisão deste relatório não está incluída. |
 
 Os tokens são medidos por workflow, e cada onda mistura tickets das duas fases. Por isso não há divisão exata por fase. Pela proporção de agentes, os tickets T1.x respondem por cerca de metade do total. O consumo do orquestrador (sessão principal) não está incluído.
 
