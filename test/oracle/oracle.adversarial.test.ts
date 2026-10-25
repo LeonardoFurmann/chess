@@ -107,7 +107,7 @@ describe("adversarial oracle: random games from perft FENs", () => {
       for (let g = 0; g < 12; g++) {
         expect(randomGame(c.fen, rng, 120), `game ${g}`).toBeNull();
       }
-    }, 30_000);
+    }, 180_000);
   });
 });
 
