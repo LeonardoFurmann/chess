@@ -23,7 +23,7 @@ Os 8 tickets da Fase 2 foram mergeados na `main`, e as issues #11–#18 estão f
 | T2.6 Tela inicial e persistência | #21 | `2e80288` | 18/10 16:09 | 0 | 45 |
 | T2.7 Página `/play` | #35 | `06aeffa` | 18/10 23:18 | 0 | 28 |
 | T2.8 E2E | #40 | `f0a9865` | 25/10 17:38 | 0 | 10 |
-| T1.10 Invariantes no oráculo (complemento da Fase 1) | #39 | `6bc57be` | 25/10 17:42 | 2 (escopo) | 15 |
+| T1.10 Invariantes no oráculo (complemento da Fase 1) | #39 | `6bc57be` | 25/10 17:42 | 2 (timeout e escopo) | 15 |
 
 As contagens de testes adversariais são as informadas pelo verificador e seguem o mesmo critério do relatório da Fase 1.
 
